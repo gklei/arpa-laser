@@ -152,7 +152,7 @@ int midiValue(Note note, Octave octave)
 {
   switch (note) 
   {
-    case C: return cMidiValue(octave); break;
+    case C: return cMidiValue(octave);
     case CSharp: return cSharpMidiValue(octave);
     case D: return dMidiValue(octave);
     case DSharp: return dSharpMidiValue(octave);
