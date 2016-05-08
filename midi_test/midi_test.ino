@@ -4,147 +4,102 @@ enum Note {
 };
 
 enum Octave {
-  First, Second
+  Third, Fourth
 };
-
-String noteName(Note note)
-{
-  String noteName = "";
-  switch (note) 
-  {
-    case C:
-      noteName = "C";
-      break;
-    case CSharp:
-      noteName = "C#";
-      break;
-    case D:
-      noteName = "D";
-      break;
-    case DSharp:
-      noteName = "D#";
-      break;
-    case E:
-      noteName = "E";
-      break;
-    case F:
-      noteName = "F";
-      break;
-    case FSharp:
-      noteName = "F#";
-      break;
-    case G:
-      noteName = "G";
-      break;
-    case GSharp:
-      noteName = "G#";
-      break;
-    case A:
-      noteName = "A";
-      break;
-    case ASharp:
-      noteName = "A#";
-      break;
-    case B:
-      noteName = "B";
-      break;
-  }
-  return noteName;
-}
 
 int cMidiValue(Octave octave)
 {
   switch (octave) {
-    case First: return 36;
-    case Second: return 48;
+    case Third: return 36;
+    case Fourth: return 48;
   }
 }
 
 int cSharpMidiValue(Octave octave)
 {
   switch (octave) {
-    case First: return 37;
-    case Second: return 49;
+    case Third: return 37;
+    case Fourth: return 49;
   }
 }
 
 int dMidiValue(Octave octave)
 {
   switch (octave) {
-    case First: return 38;
-    case Second: return 50;
+    case Third: return 38;
+    case Fourth: return 50;
   }
 }
 
 int dSharpMidiValue(Octave octave)
 {
   switch (octave) {
-    case First: return 39;
-    case Second: return 51;
+    case Third: return 39;
+    case Fourth: return 51;
   }
 }
 
 int eMidiValue(Octave octave)
 {
   switch (octave) {
-    case First: return 40;
-    case Second: return 52;
+    case Third: return 40;
+    case Fourth: return 52;
   }
 }
 
 int fMidiValue(Octave octave)
 {
   switch (octave) {
-    case First: return 41;
-    case Second: return 53;
+    case Third: return 41;
+    case Fourth: return 53;
   }
 }
 
 int fSharpMidiValue(Octave octave)
 {
   switch (octave) {
-    case First: return 42;
-    case Second: return 54;
+    case Third: return 42;
+    case Fourth: return 54;
   }
 }
 
 int gMidiValue(Octave octave)
 {
   switch (octave) {
-    case First: return 43;
-    case Second: return 55;
+    case Third: return 43;
+    case Fourth: return 55;
   }
 }
 
 int gSharpMidiValue(Octave octave)
 {
   switch (octave) {
-    case First: return 44;
-    case Second: return 56;
+    case Third: return 44;
+    case Fourth: return 56;
   }
 }
 
 int aMidiValue(Octave octave)
 {
   switch (octave) {
-    case First: return 45;
-    case Second: return 57;
+    case Third: return 45;
+    case Fourth: return 57;
   }
 }
 
 int aSharpMidiValue(Octave octave)
 {
   switch (octave) {
-    case First: return 46;
-    case Second: return 58;
+    case Third: return 46;
+    case Fourth: return 58;
   }
 }
 
 int bMidiValue(Octave octave)
 {
   switch (octave) {
-    case First: return 47;
-    case Second: return 59;
+    case Third: return 47;
+    case Fourth: return 59;
   }
 }
 
@@ -164,6 +119,7 @@ int midiValue(Note note, Octave octave)
     case A: return aMidiValue(octave);
     case ASharp: return aSharpMidiValue(octave);
     case B: return bMidiValue(octave);
+    default: return cMidiValue(octave);
   }
 }
 
@@ -192,10 +148,10 @@ void stopNote(Note note, Octave octave)
   Serial.write(0x00);
 }
 
-void playNote(Note note, Octave octave, float seconds)
+void playNote(Note note, Octave octave, float duration)
 { 
   playNote(note, octave);
-  delay(seconds * 1000);
+  delay(duration * 1000);
 
   stopNote(note, octave);
 }
@@ -203,10 +159,13 @@ void playNote(Note note, Octave octave, float seconds)
 void loop() 
 {
   Note notes[] = {C, D, E, FSharp, GSharp, ASharp, C};
-  Octave octaves[] = {First, First, First, First, First, First, Second};
+  Octave octaves[] = {Third, Third, Third, Third, Third, Third, Fourth};
 
   for (int i = 0; i < 7; i = i + 1) 
   {
-    playNote(notes[i], octaves[i], 0.1);
+    Note n = notes[i];
+    Octave o = octaves[i];
+    
+    playNote(n, o, 0.25);
   }
 }
