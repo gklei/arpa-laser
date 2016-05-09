@@ -1,5 +1,5 @@
 int LaserState = LOW;                    // The variable that stores the state of the laser beam.
-int sensor = 8;                         // Change this value to calibrate your harp's sensor
+int sensor = 10;                         // Change this value to calibrate your harp's sensor
 int delaylaser = 5;                     // If you increase this, the laser will be brighter, but the harp will be less fluid
 int delaymotor = 1;                     // This variable affects the speed, and fluidity of the harp.
 
@@ -42,7 +42,8 @@ void setup()
   pinMode(13, OUTPUT);                 // Setup for status led.
 
 
-  Serial.begin(31250);                 //  Start a serial communication channel for MIDI
+//  Serial.begin(31250);                 //  Start a serial communication channel for MIDI
+  Serial.begin(9600);
 }
 
 void noteOn(int cmd, int pitch, int velocity)     // Function to play the notes
@@ -103,8 +104,8 @@ void loop() {
   digitalWrite(LaserPin, HIGH);               // Turn on the laser for the 1st beam.
   delay(delaylaser);
 
-  if (true || (analogRead(0) > sensor ) && (a == 0) ) // If the sensor gets a signal, and the not is not playing:
-
+    Serial.println(analogRead(A0));
+  if ((analogRead(0) > sensor ) && (a == 0) ) // If the sensor gets a signal, and the not is not playing:
   {
     digitalWrite(13, HIGH);       // Switch on status led.
     noteOn(0x90, note1, 0x7F);    // Play note 1
@@ -112,7 +113,7 @@ void loop() {
   }
 
 
-  else if(false && analogRead(0) < sensor )             // If the sensor does not get a signal:
+  else if (analogRead(0) < sensor )             // If the sensor does not get a signal:
 
   {
     digitalWrite(13, LOW);         // Switch off the status led.
@@ -504,7 +505,7 @@ void loop() {
   digitalWrite(LaserPin, HIGH);    //This is beam 2
   delay(delaylaser);
 
-  if(true || (analogRead(0) > sensor ) && (b == 0) )
+  if((analogRead(0) > sensor ) && (b == 0) )
 
   {
     digitalWrite(13, HIGH);
