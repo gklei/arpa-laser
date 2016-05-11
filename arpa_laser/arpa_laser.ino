@@ -1,3 +1,5 @@
+#include <Motor.h>
+
 int LaserState = LOW;                    // The variable that stores the state of the laser beam.
 int sensor = 1023;                         // Change this value to calibrate your harp's sensor
 int LASER_DELAY = 5;                     // If you increase this, the laser will be brighter, but the harp will be less fluid
