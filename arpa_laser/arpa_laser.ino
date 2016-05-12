@@ -1,9 +1,7 @@
-#include <Motor.h>
-
 int LaserState = LOW;                    // The variable that stores the state of the laser beam.
 int sensor = 1023;                         // Change this value to calibrate your harp's sensor
 int LASER_DELAY = 5;                     // If you increase this, the laser will be brighter, but the harp will be less fluid
-int delaymotor = 1;                     // This variable affects the speed, and fluidity of the harp.
+int delaymotor = 500;                     // This variable affects the speed, and fluidity of the harp.
 
 int LaserPin =  7;                       // Tell the arduino that the laser is on pin 7
 
@@ -12,10 +10,10 @@ int motorPin2 = 9;
 int motorPin3 = 10;
 int motorPin4 = 11;
 
+int motorSpeed = 2400;
+const int DEFAULT_STEP_COUNT = 1;
 const int STEPPER_COUNT = 8;
 int lookup[8] = {B01000, B01100, B00100, B00110, B00010, B00011, B00001, B01001};
-
-int motorSpeed = 950;
 
 int note9 = 60;
 int note8 = 60;
@@ -96,7 +94,7 @@ void noteOn(int cmd, int pitch, int velocity)
 // ----------------------------------------------------------------------------
 // Motor Utility Methods
 // ----------------------------------------------------------------------------
-void moveMotorCounterclockwise(int steps = 3)
+void moveMotorCounterclockwise(int steps = DEFAULT_STEP_COUNT)
 {
   for (int s = 0; s < steps; ++s) {
     for (int i = 0; i < STEPPER_COUNT; ++i) {
@@ -106,7 +104,7 @@ void moveMotorCounterclockwise(int steps = 3)
   }
 }
 
-void moveMotorClockwise(int steps = 3)
+void moveMotorClockwise(int steps = DEFAULT_STEP_COUNT)
 {
   for (int s = 0; s < steps; ++s) {
     for (int i = STEPPER_COUNT; i > 0; --i) {
