@@ -1,11 +1,13 @@
 #include <Stepper.h>
+#include <MIDI.h>
+#include <Note.h>
 
-bool DEBUG_MODE = true;
+#define DEBUG_MODE false
 
 /*----- Stepper-related Constants -----*/
 #define STEPS_FOR_FULL_ROTATION 48
 #define STEP_DISTANCE 1
-#define STEPPER_SPEED 3000
+#define STEPPER_SPEED 10
 
 /*----- Laser-related Constants -----*/
 #define LASER_DELAY 9
@@ -14,26 +16,19 @@ bool DEBUG_MODE = true;
 #define LASER_PIN 7
 
 /*----- Note-related Constants -----*/
-#define TOTAL_NOTES 8
+#define TOTAL_NOTES 5
 #define MIDI_BAUD 31250
+#define DEBUG_BAUD 9600
 
 /*----- Declare objects -----*/
 Stepper stepper(STEPS_FOR_FULL_ROTATION, 8, 9, 10, 11);
+MIDI midi;
+Note note(NoteName::FSharp);
 
 /*---- Setup Methods ----*/
 void _setupLaserPin()
 {
   pinMode(LASER_PIN, OUTPUT);
-}
-
-void _connectToMIDI()
-{
-  Serial.begin(MIDI_BAUD);
-}
-
-void _connectToConsoleForDebugging()
-{
-  Serial.begin(9600);
 }
 
 /*---- Utility Methods ----*/
@@ -68,19 +63,59 @@ void setup()
 {
   _setupLaserPin();
   stepper.setSpeed(STEPPER_SPEED);
+  
+  midi.connectWithMode(MIDIConnectionMode::Play);
+}
 
-  if (DEBUG_MODE) {
-    _connectToConsoleForDebugging();
+bool playing1, playing2, playing3, playing4, playing5 = false;
+
+void setPlaying(int noteNumber, bool playing)
+{
+  if (noteNumber == 1) {
+    playing1 = playing;
   }
-  else {
-    _connectToMIDI();
+  else if (noteNumber == 2) {
+    playing2 = playing;
+  }
+  else if (noteNumber == 3) {
+    playing3 = playing;
+  }
+  else if (noteNumber == 4) {
+    playing4 = playing;
+  }
+  else if (noteNumber == 5) {
+    playing5 = playing;
   }
 }
 
-void loop()
+int isPlaying(int noteNumber)
 {
-  printSensorValueToConsoleIfInDebug();
+  if (noteNumber == 1) {
+    return playing1;
+  }
+  else if (noteNumber == 2) {
+    return playing2;
+  }
+  else if (noteNumber == 3) {
+    return playing3;
+  }
+  else if (noteNumber == 4) {
+    return playing4;
+  }
+  else if (noteNumber == 5) {
+    return playing5;
+  }
+  return false;
+}
 
+void theLoopFunctionToBeUsed()
+{
+  Note noteNames[] = {GSharp, DSharp, ASharp, B, DSharp};
+  Note majorNoteNames[] = {E, B, FSharp, GSharp, B};
+
+  int octaves[] = {3, 4, 4, 4, 5};
+  int majorOctaves[] {3, 3, 4, 4, 4};
+  
   // Reduce blur on the beginning note.
   delay(LASER_SHORTSTOP);
 
@@ -88,8 +123,25 @@ void loop()
   {
     turnLaserON();
     // read photoresistor value and play or turn note off
-    turnLaserOFF();
 
+    delay(LASER_DELAY);
+    int light = analogRead(0);
+
+    Note note(majorNoteNames[noteIndex]);
+    int octave = majorOctaves[noteIndex];
+    
+    if (light > 3) {
+      if (!isPlaying(noteIndex + 1)) {
+        setPlaying(noteIndex + 1, true);
+        midi.playNote(note, octave); 
+      }
+    }
+    else {
+      setPlaying(noteIndex + 1, false);
+      midi.stopPlayingNote(note, octave);
+    }
+
+    turnLaserOFF();
     stepper.step(STEP_DISTANCE);
     delay(LASER_DELAY);
   }
@@ -100,4 +152,48 @@ void loop()
     stepper.step(-STEP_DISTANCE);
     delay(LASER_SHORTSTOP);
   }
+}
+
+void testingLoop()
+{
+  Note noteNames[] = {GSharp, DSharp, ASharp, B, DSharp};
+  Note majorNoteNames[] = {E, B, FSharp, GSharp, B};
+
+  int octaves[] = {3, 4, 4, 4, 5};
+  int majorOctaves[] {3, 3, 4, 4, 4};
+
+  for (int i = 0; i < 5; ++i) {
+    Note note(noteNames[i]);
+    int octave = octaves[i];
+    midi.playNote(note, octave);
+
+    delay(500);
+  }
+
+  for (int i = 0; i < 5; ++i) { 
+    Note note(noteNames[i]);
+    int octave = octaves[i];
+    midi.stopPlayingNote(note, octave);
+  }
+
+
+  for (int i = 0; i < 5; ++i) {
+    Note note(majorNoteNames[i]);
+    int octave = majorOctaves[i];
+    midi.playNote(note, octave);
+
+    delay(500);
+  }
+
+  for (int i = 0; i < 5; ++i) { 
+    Note note(majorNoteNames[i]);
+    int octave = majorOctaves[i];
+    midi.stopPlayingNote(note, octave);
+  }
+}
+
+void loop()
+{
+  theLoopFunctionToBeUsed();
+//  testingLoop();
 }
