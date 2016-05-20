@@ -32,18 +32,28 @@ void MIDI::playNote(Note note, int octave)
 	else {
 	    Serial.write(0x90);
 	    Serial.write(note.midiValue(octave));
-	    Serial.write(0x7F); 
+	    Serial.write(0x7F);
 	}
+}
+
+void MIDI::playEvent(MIDIEvent event)
+{
+	playNote(event.note, event.octave);
 }
 
 void MIDI::stopPlayingNote(Note note, int octave)
 {
 	if (_debug) {
-		// Serial.println("Stopping note!");
+		Serial.println("Stopping note: " + note.debugName(octave));
 	}
 	else {
 	    Serial.write(0x90);
 	    Serial.write(note.midiValue(octave));
 	    Serial.write(0);
 	}
+}
+
+void MIDI::stopPlayingEvent(MIDIEvent event)
+{
+	stopPlayingNote(event.note, event.octave);
 }

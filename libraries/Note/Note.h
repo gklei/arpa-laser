@@ -13,7 +13,8 @@ enum NoteName {
 
 class Note
 {
-	public: 
+	public:
+		Note();
 		Note(NoteName name);
 		int midiValue(int octave);
 
@@ -21,6 +22,11 @@ class Note
 		String debugName(int octave);
 	private:
 		NoteName _name;
+};
+
+struct MIDIEvent {
+  Note note;
+  int octave;
 };
 
 #endif

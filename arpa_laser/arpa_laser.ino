@@ -1,19 +1,22 @@
 #include <Stepper.h>
 #include <MIDI.h>
 #include <Note.h>
+#include <Scale.h>
 
 #define DEBUG_MODE false
 
 /*----- Stepper-related Constants -----*/
 #define STEPS_FOR_FULL_ROTATION 48
 #define STEP_DISTANCE 1
-#define STEPPER_SPEED 10
+#define STEPPER_SPEED 1000
 
 /*----- Laser-related Constants -----*/
-#define LASER_DELAY 9
+#define LASER_DELAY 18
 // If this is too small, the stepper will freak out.
 #define LASER_SHORTSTOP 4
 #define LASER_PIN 7
+
+#define LASER_THRESHOLD 60
 
 /*----- Note-related Constants -----*/
 #define TOTAL_NOTES 5
@@ -24,6 +27,11 @@
 Stepper stepper(STEPS_FOR_FULL_ROTATION, 8, 9, 10, 11);
 MIDI midi;
 Note note(NoteName::FSharp);
+Scale scale;
+
+
+NoteIndex noteIndicies[5] = { NoteIndex1, NoteIndex2, NoteIndex3, NoteIndex4, NoteIndex5 };
+ScaleType currentScale = ScaleType::MajorPentatonic;
 
 /*---- Setup Methods ----*/
 void _setupLaserPin()
@@ -42,7 +50,7 @@ void turnLaserON()
 void turnLaserOFF()
 {
   digitalWrite(LASER_PIN, LOW);
-  delay(LASER_DELAY);
+  delay(LASER_SHORTSTOP);
 }
 
 void printSensorValueToConsoleIfInDebug()
@@ -52,69 +60,110 @@ void printSensorValueToConsoleIfInDebug()
   }
 }
 
-void waitASecond() {
-  stepper.step(0);
-  delay(10);
-  stepper.step(0);
-}
-
 /*---- Overridden Methods ----*/
 void setup()
 {
   _setupLaserPin();
   stepper.setSpeed(STEPPER_SPEED);
-  
-  midi.connectWithMode(MIDIConnectionMode::Play);
+
+  if (DEBUG_MODE) {
+    midi.connectWithMode(MIDIConnectionMode::Debug);
+  } else {
+    midi.connectWithMode(MIDIConnectionMode::Play);
+  }
 }
 
 bool playing1, playing2, playing3, playing4, playing5 = false;
 
-void setPlaying(int noteNumber, bool playing)
+void setPlaying(int noteIndex, bool playing)
 {
-  if (noteNumber == 1) {
+  if (noteIndex == 0) {
     playing1 = playing;
   }
-  else if (noteNumber == 2) {
+  else if (noteIndex == 1) {
     playing2 = playing;
   }
-  else if (noteNumber == 3) {
+  else if (noteIndex == 2) {
     playing3 = playing;
   }
-  else if (noteNumber == 4) {
+  else if (noteIndex == 3) {
     playing4 = playing;
   }
-  else if (noteNumber == 5) {
+  else if (noteIndex == 4) {
     playing5 = playing;
   }
 }
 
-int isPlaying(int noteNumber)
+int isPlaying(int noteIndex)
 {
-  if (noteNumber == 1) {
+  if (noteIndex == 0) {
     return playing1;
   }
-  else if (noteNumber == 2) {
+  else if (noteIndex == 1) {
     return playing2;
   }
-  else if (noteNumber == 3) {
+  else if (noteIndex == 2) {
     return playing3;
   }
-  else if (noteNumber == 4) {
+  else if (noteIndex == 3) {
     return playing4;
   }
-  else if (noteNumber == 5) {
+  else if (noteIndex == 4) {
     return playing5;
   }
   return false;
 }
 
-void theLoopFunctionToBeUsed()
+void loop()
 {
-  Note noteNames[] = {GSharp, DSharp, ASharp, B, DSharp};
-  Note majorNoteNames[] = {E, B, FSharp, GSharp, B};
+//  oldLoop();
+  newLoop();
+}
 
-  int octaves[] = {3, 4, 4, 4, 5};
-  int majorOctaves[] {3, 3, 4, 4, 4};
+void newLoop()
+{
+  // Reduce blur on the beginning note.
+  delay(LASER_SHORTSTOP);
+  for (int index = 0; index < scale.totalNotes(); ++index)
+  {
+    turnLaserON();
+    
+    delay(LASER_DELAY);
+    int light = analogRead(0);
+    printSensorValueToConsoleIfInDebug();
+
+    NoteIndex noteIndex = noteIndicies[index];
+    MIDIEvent event = scale.midiEvent(noteIndex, currentScale);
+       
+    if (light > LASER_THRESHOLD) {
+      if (!isPlaying(index)) {
+        setPlaying(index, true);
+        midi.playEvent(event);
+      }
+    }
+    else {
+      setPlaying(noteIndex, false);
+      midi.stopPlayingEvent(event);
+    }
+
+    turnLaserOFF();
+    delay(2);
+    stepper.step(STEP_DISTANCE);
+    delay(4);
+  }
+  
+  // Don't draw lasers on the downstroke, to reduce blur.
+  for (int noteIndex = TOTAL_NOTES; noteIndex > 0; --noteIndex)
+  {
+    stepper.step(-STEP_DISTANCE);
+    delay(LASER_SHORTSTOP);
+  }
+}
+
+void oldLoop()
+{
+  Note majorNoteNames[] = {C, DSharp, F, G, ASharp};
+  int majorOctaves[] {4, 4, 4, 4, 4};
   
   // Reduce blur on the beginning note.
   delay(LASER_SHORTSTOP);
@@ -126,11 +175,12 @@ void theLoopFunctionToBeUsed()
 
     delay(LASER_DELAY);
     int light = analogRead(0);
+    printSensorValueToConsoleIfInDebug();
 
     Note note(majorNoteNames[noteIndex]);
     int octave = majorOctaves[noteIndex];
     
-    if (light > 3) {
+    if (light > LASER_THRESHOLD) {
       if (!isPlaying(noteIndex + 1)) {
         setPlaying(noteIndex + 1, true);
         midi.playNote(note, octave); 
@@ -142,8 +192,9 @@ void theLoopFunctionToBeUsed()
     }
 
     turnLaserOFF();
+    delay(2);
     stepper.step(STEP_DISTANCE);
-    delay(LASER_DELAY);
+    delay(4);
   }
 
   // Don't draw lasers on the downstroke, to reduce blur.
@@ -154,46 +205,3 @@ void theLoopFunctionToBeUsed()
   }
 }
 
-void testingLoop()
-{
-  Note noteNames[] = {GSharp, DSharp, ASharp, B, DSharp};
-  Note majorNoteNames[] = {E, B, FSharp, GSharp, B};
-
-  int octaves[] = {3, 4, 4, 4, 5};
-  int majorOctaves[] {3, 3, 4, 4, 4};
-
-  for (int i = 0; i < 5; ++i) {
-    Note note(noteNames[i]);
-    int octave = octaves[i];
-    midi.playNote(note, octave);
-
-    delay(500);
-  }
-
-  for (int i = 0; i < 5; ++i) { 
-    Note note(noteNames[i]);
-    int octave = octaves[i];
-    midi.stopPlayingNote(note, octave);
-  }
-
-
-  for (int i = 0; i < 5; ++i) {
-    Note note(majorNoteNames[i]);
-    int octave = majorOctaves[i];
-    midi.playNote(note, octave);
-
-    delay(500);
-  }
-
-  for (int i = 0; i < 5; ++i) { 
-    Note note(majorNoteNames[i]);
-    int octave = majorOctaves[i];
-    midi.stopPlayingNote(note, octave);
-  }
-}
-
-void loop()
-{
-  theLoopFunctionToBeUsed();
-//  testingLoop();
-}

@@ -21,7 +21,10 @@ class MIDI
     void connectWithMode(MIDIConnectionMode mode);
 
     void playNote(Note note, int octave);
+    void playEvent(MIDIEvent event);
+
     void stopPlayingNote(Note note, int octave);
+    void stopPlayingEvent(MIDIEvent event);
   private:
   	bool _debug = false;
 };

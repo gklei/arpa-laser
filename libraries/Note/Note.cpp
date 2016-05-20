@@ -24,6 +24,11 @@ int _noteValue(NoteName name)
 	}
 }
 
+Note::Note()
+{
+	_name = NoteName::C;
+}
+
 Note::Note(NoteName name)
 {
 	_name = name;
