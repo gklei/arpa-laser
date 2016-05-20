@@ -19,7 +19,6 @@
 #define LASER_THRESHOLD 60
 
 /*----- Note-related Constants -----*/
-#define TOTAL_NOTES 5
 #define MIDI_BAUD 31250
 #define DEBUG_BAUD 9600
 
@@ -29,9 +28,9 @@ MIDI midi;
 Note note(NoteName::FSharp);
 Scale scale;
 
-
+bool playing1, playing2, playing3, playing4, playing5 = false;
 NoteIndex noteIndicies[5] = { NoteIndex1, NoteIndex2, NoteIndex3, NoteIndex4, NoteIndex5 };
-ScaleType currentScale = ScaleType::MajorPentatonic;
+ScaleType currentScale = ScaleType::Major7_2;
 
 /*---- Setup Methods ----*/
 void _setupLaserPin()
@@ -72,8 +71,6 @@ void setup()
     midi.connectWithMode(MIDIConnectionMode::Play);
   }
 }
-
-bool playing1, playing2, playing3, playing4, playing5 = false;
 
 void setPlaying(int noteIndex, bool playing)
 {
@@ -116,12 +113,6 @@ int isPlaying(int noteIndex)
 
 void loop()
 {
-//  oldLoop();
-  newLoop();
-}
-
-void newLoop()
-{
   // Reduce blur on the beginning note.
   delay(LASER_SHORTSTOP);
   for (int index = 0; index < scale.totalNotes(); ++index)
@@ -153,52 +144,7 @@ void newLoop()
   }
   
   // Don't draw lasers on the downstroke, to reduce blur.
-  for (int noteIndex = TOTAL_NOTES; noteIndex > 0; --noteIndex)
-  {
-    stepper.step(-STEP_DISTANCE);
-    delay(LASER_SHORTSTOP);
-  }
-}
-
-void oldLoop()
-{
-  Note majorNoteNames[] = {C, DSharp, F, G, ASharp};
-  int majorOctaves[] {4, 4, 4, 4, 4};
-  
-  // Reduce blur on the beginning note.
-  delay(LASER_SHORTSTOP);
-
-  for (int noteIndex = 0; noteIndex < TOTAL_NOTES; ++noteIndex)
-  {
-    turnLaserON();
-    // read photoresistor value and play or turn note off
-
-    delay(LASER_DELAY);
-    int light = analogRead(0);
-    printSensorValueToConsoleIfInDebug();
-
-    Note note(majorNoteNames[noteIndex]);
-    int octave = majorOctaves[noteIndex];
-    
-    if (light > LASER_THRESHOLD) {
-      if (!isPlaying(noteIndex + 1)) {
-        setPlaying(noteIndex + 1, true);
-        midi.playNote(note, octave); 
-      }
-    }
-    else {
-      setPlaying(noteIndex + 1, false);
-      midi.stopPlayingNote(note, octave);
-    }
-
-    turnLaserOFF();
-    delay(2);
-    stepper.step(STEP_DISTANCE);
-    delay(4);
-  }
-
-  // Don't draw lasers on the downstroke, to reduce blur.
-  for (int noteIndex = TOTAL_NOTES; noteIndex > 0; --noteIndex)
+  for (int noteIndex = scale.totalNotes(); noteIndex > 0; --noteIndex)
   {
     stepper.step(-STEP_DISTANCE);
     delay(LASER_SHORTSTOP);
