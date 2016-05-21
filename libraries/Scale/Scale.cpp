@@ -50,6 +50,32 @@ NoteIndex* Scale::noteIndexArray()
 	return indicies;
 }
 
+ScaleType Scale::next(ScaleType scale)
+{
+	switch (scale) {
+		case MinorPentatonic: return MajorPentatonic; 
+		case MajorPentatonic: return MinorHarmonic;
+		case MinorHarmonic: return Ethiopian;
+		case Ethiopian: return Major7_2;
+		case Major7_2: return Minor7_2;
+		case Minor7_2: return EthiopianMajor;
+		case EthiopianMajor: return MinorPentatonic;
+	}
+}
+
+String Scale::scaleName(ScaleType scale)
+{
+	switch (scale) {
+		case MinorPentatonic: return "MajorPentatonic";
+		case MajorPentatonic: return "MinorHarmonic";
+		case MinorHarmonic: return "Ethiopian";
+		case Ethiopian: return "Major7_2";
+		case Major7_2: return "Minor7_2";
+		case Minor7_2: return "EthiopianMajor";
+		case EthiopianMajor: return "MinorPentatonic";
+	}
+}
+
 Note* _notesForScale(ScaleType type)
 {
 	Note* results = new Note[TOTAL_NOTES];

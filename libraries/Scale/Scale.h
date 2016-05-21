@@ -35,6 +35,8 @@ class Scale
     NoteIndex* noteIndexArray();
 
     MIDIEvent midiEvent(NoteIndex index, ScaleType scale);
+    ScaleType next(ScaleType scale);
+    String scaleName(ScaleType scale);
   private:
 };
 
