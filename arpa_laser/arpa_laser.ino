@@ -16,11 +16,14 @@
 #define LASER_SHORTSTOP 4
 #define LASER_PIN 7
 
-#define LASER_THRESHOLD 60
+#define LASER_THRESHOLD 100
 
 /*----- Note-related Constants -----*/
 #define MIDI_BAUD 31250
 #define DEBUG_BAUD 9600
+
+/*----- Button-related Constants -----*/
+#define BUTTON_PIN 2
 
 /*----- Declare objects -----*/
 Stepper stepper(STEPS_FOR_FULL_ROTATION, 8, 9, 10, 11);
@@ -30,12 +33,18 @@ Scale scale;
 
 bool playing1, playing2, playing3, playing4, playing5 = false;
 NoteIndex noteIndicies[5] = { NoteIndex1, NoteIndex2, NoteIndex3, NoteIndex4, NoteIndex5 };
-ScaleType currentScale = ScaleType::Major7_2;
+ScaleType currentScaleType = ScaleType::Ethiopian;
 
 /*---- Setup Methods ----*/
 void _setupLaserPin()
 {
   pinMode(LASER_PIN, OUTPUT);
+}
+
+void _setupButtons()
+{
+  pinMode(13, OUTPUT);
+  pinMode(BUTTON_PIN, INPUT);
 }
 
 /*---- Utility Methods ----*/
@@ -63,6 +72,7 @@ void printSensorValueToConsoleIfInDebug()
 void setup()
 {
   _setupLaserPin();
+  _setupButtons();
   stepper.setSpeed(STEPPER_SPEED);
 
   if (DEBUG_MODE) {
@@ -111,7 +121,65 @@ int isPlaying(int noteIndex)
   return false;
 }
 
+void advanceScaleType()
+{
+  currentScaleType = scale.next(currentScaleType);
+}
+
+void printcurrentScaleTypeName()
+{
+  String currentScaleTypeName = scale.scaleName(currentScaleType);
+  Serial.println(currentScaleTypeName); 
+}
+
+float lastTimestamp = 0;
 void loop()
+{
+//  float currentTimestamp = millis();
+//  if (currentTimestamp - lastTimestamp > (10 * 1000)) 
+//  {
+//    lastTimestamp = currentTimestamp;
+//    turnOffAllNotes(currentScaleType);
+//    advanceScaleType();
+//  }
+  
+  laser_harp_loop();
+}
+
+void scale_testing_loop()
+{
+  printcurrentScaleTypeName();
+  advanceScaleType();
+  delay(1000);
+}
+
+int buttonState = 0;
+void button_testing_loop()
+{
+  buttonState = digitalRead(BUTTON_PIN);
+  Serial.println(buttonState);
+  
+  if (buttonState == HIGH) {
+    digitalWrite(13, HIGH);
+  }
+  else {
+    digitalWrite(13, LOW);
+  }
+
+  delay(100);
+}
+
+void turnOffAllNotes(ScaleType type)
+{
+  for (int index = 0; index < scale.totalNotes(); ++index)
+  {
+    NoteIndex noteIndex = noteIndicies[index];
+    MIDIEvent event = scale.midiEvent(noteIndex, type);
+    midi.stopPlayingEvent(event);
+  }
+}
+
+void laser_harp_loop()
 {
   // Reduce blur on the beginning note.
   delay(LASER_SHORTSTOP);
@@ -124,7 +192,7 @@ void loop()
     printSensorValueToConsoleIfInDebug();
 
     NoteIndex noteIndex = noteIndicies[index];
-    MIDIEvent event = scale.midiEvent(noteIndex, currentScale);
+    MIDIEvent event = scale.midiEvent(noteIndex, currentScaleType);
        
     if (light > LASER_THRESHOLD) {
       if (!isPlaying(index)) {
